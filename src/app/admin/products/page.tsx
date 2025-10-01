@@ -2,7 +2,7 @@ import prisma from "@/lib/prisma";
 import ProductForm from "./ProductForm";
 import Image from "next/image";
 import Link from "next/link";
-import { Edit, AlertCircle, Package } from "lucide-react";
+import { Edit, AlertCircle } from "lucide-react";
 import { DeleteProductButton } from "./DeleteProductButton";
 
 export default async function AdminProductsPage() {
