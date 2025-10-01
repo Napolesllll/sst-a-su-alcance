@@ -2,7 +2,7 @@ import prisma from "@/lib/prisma";
 import CategoryForm from "./CategoryForm";
 import Image from "next/image";
 import Link from "next/link";
-import { Edit, AlertCircle, Package } from "lucide-react";
+import { Edit, Package } from "lucide-react";
 import { DeleteCategoryButton } from "./DeleteCategoryButton";
 
 export default async function AdminCategoriesPage() {

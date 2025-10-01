@@ -1,4 +1,4 @@
-'use client';
+"use client";
 import { motion, useAnimationControls } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
@@ -20,15 +20,15 @@ const clientesImagenes = [
   "TIGO UNE.jpeg",
   "VELEZ.jpeg",
   "COINSI.jpg",
-  "ARL SURA.png"
+  "ARL SURA.png",
 ];
 
 export const Clientes = () => {
   const controls = useAnimationControls();
-  const containerRef = useRef(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
   const [itemWidth, setItemWidth] = useState(0);
-  
+
   // Configuración para el desplazamiento suave
   const copies = 3; // Número de copias para un efecto continuo
   const duplicatedClientes = Array(copies).fill(clientesImagenes).flat();
@@ -39,8 +39,9 @@ export const Clientes = () => {
     const updateDimensions = () => {
       if (containerRef.current) {
         setContainerWidth(containerRef.current.offsetWidth);
-        
-        const firstItem = containerRef.current.querySelector('.carousel-item');
+
+        const firstItem =
+          containerRef.current.querySelector<HTMLElement>(".carousel-item");
         if (firstItem) {
           // Incluir margen en el cálculo del ancho (mx-4 = 16px a cada lado)
           setItemWidth(firstItem.offsetWidth + 32);
@@ -49,45 +50,45 @@ export const Clientes = () => {
     };
 
     updateDimensions();
-    window.addEventListener('resize', updateDimensions);
-    
-    return () => window.removeEventListener('resize', updateDimensions);
+    window.addEventListener("resize", updateDimensions);
+
+    return () => window.removeEventListener("resize", updateDimensions);
   }, []);
 
   useEffect(() => {
     if (!containerWidth || !itemWidth || itemWidth === 0) return;
-    
+
     const totalWidth = duplicatedClientes.length * itemWidth;
     // Calcular la distancia necesaria para mostrar todas las copias
     const distance = -(totalWidth - containerWidth);
-    
+
     const animateCarousel = async () => {
       // Posicionar el carrusel al inicio
-      await controls.start({ 
+      await controls.start({
         x: 0,
-        transition: { duration: 0 }
+        transition: { duration: 0 },
       });
-      
+
       // Bucle infinito suave
       while (true) {
-        await controls.start({ 
-          x: distance, 
-          transition: { 
+        await controls.start({
+          x: distance,
+          transition: {
             duration: Math.abs(distance) / speed,
-            ease: "linear" 
-          } 
+            ease: "linear",
+          },
         });
-        
+
         // Reiniciar posición sin animación
-        await controls.start({ 
+        await controls.start({
           x: 0,
-          transition: { duration: 0 }
+          transition: { duration: 0 },
         });
       }
     };
-    
+
     animateCarousel();
-    
+
     return () => controls.stop();
   }, [containerWidth, itemWidth, controls, duplicatedClientes.length, speed]);
 
@@ -112,20 +113,20 @@ export const Clientes = () => {
               y: [0, Math.random() * 40 - 20],
               x: [0, Math.random() * 30 - 15],
               scale: [1, 1.2, 1],
-              opacity: [0.1, 0.2, 0.1]
+              opacity: [0.1, 0.2, 0.1],
             }}
             transition={{
               duration: 8 + Math.random() * 12,
               repeat: Infinity,
               repeatType: "reverse",
-              ease: "easeInOut"
+              ease: "easeInOut",
             }}
           />
         ))}
       </div>
 
       {/* Efecto de luz central */}
-      <motion.div 
+      <motion.div
         className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[60vh] rounded-full bg-cyan-500/5 blur-3xl z-0"
         animate={{ opacity: [0.05, 0.1, 0.05] }}
         transition={{ duration: 8, repeat: Infinity }}
@@ -149,36 +150,34 @@ export const Clientes = () => {
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            Empresas líderes que confían en nuestros servicios de salud y seguridad laboral
+            Empresas líderes que confían en nuestros servicios de salud y
+            seguridad laboral
           </motion.p>
         </div>
 
         {/* Carrusel optimizado para desplazamiento suave */}
-        <div 
+        <div
           ref={containerRef}
           className="relative w-full overflow-hidden py-6"
         >
-          <motion.div
-            className="flex"
-            animate={controls}
-          >
+          <motion.div className="flex" animate={controls}>
             {duplicatedClientes.map((imagen, i) => (
               <motion.div
                 key={`${imagen}-${i}`}
                 className="carousel-item flex-shrink-0 mx-4 w-52 h-32 md:w-64 md:h-40 bg-white/10 backdrop-blur-sm rounded-xl shadow-lg p-4 flex items-center justify-center hover:scale-105 transition-all duration-300 cursor-pointer border border-cyan-500/30 hover:border-cyan-300/50 relative overflow-hidden"
-                whileHover={{ 
-                  scale: 1.05, 
+                whileHover={{
+                  scale: 1.05,
                   boxShadow: "0 10px 25px rgba(0, 150, 255, 0.3)",
-                  zIndex: 10
+                  zIndex: 10,
                 }}
               >
                 {/* Efecto de resplandor sutil */}
                 <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 rounded-xl" />
-                
+
                 {/* Contenedor de la imagen optimizado */}
                 <div className="relative w-full h-full">
-                  <Image 
-                    src={`/clientes/${imagen}`} 
+                  <Image
+                    src={`/clientes/${imagen}`}
                     alt={`Cliente ${i + 1}`}
                     fill
                     className="object-contain p-2"
@@ -186,7 +185,7 @@ export const Clientes = () => {
                     priority={i < 8} // Prioriza la carga de las primeras imágenes
                   />
                 </div>
-                
+
                 {/* Efecto de reflejo */}
                 <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-white/20 to-transparent rounded-b-xl" />
               </motion.div>
@@ -195,7 +194,7 @@ export const Clientes = () => {
         </div>
 
         {/* Indicador de velocidad */}
-        <motion.div 
+        <motion.div
           className="flex flex-col items-center justify-center mt-12 text-cyan-200"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -209,8 +208,18 @@ export const Clientes = () => {
             animate={{ y: [0, 10, 0] }}
             transition={{ repeat: Infinity, duration: 1.5 }}
           >
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 14l-7 7m0 0l-7-7m7 7V3"
+              />
             </svg>
           </motion.div>
         </motion.div>

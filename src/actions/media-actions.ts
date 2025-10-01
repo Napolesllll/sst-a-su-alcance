@@ -53,11 +53,11 @@ export async function uploadMedia(formData: FormData) {
       success: true,
       message: `${uploadedCount} ${uploadedCount === 1 ? 'archivo subido' : 'archivos subidos'} correctamente`
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error al subir archivos:', error)
     return {
       success: false,
-      message: `Error al subir archivos: ${error.message}`
+      message: `Error al subir archivos: ${error instanceof Error ? error.message : 'Error desconocido'}`
     }
   }
 }
@@ -89,11 +89,11 @@ export async function deleteMedia(formData: FormData) {
 
     revalidatePath('/admin/media')
     return { success: true, message: 'Imagen eliminada correctamente' }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error al eliminar imagen:', error)
     return {
       success: false,
-      message: `Error al eliminar imagen: ${error.message}`
+      message: `Error al eliminar imagen: ${error instanceof Error ? error.message : 'Error desconocido'}`
     }
   }
 }

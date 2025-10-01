@@ -1,20 +1,19 @@
 import prisma from "@/lib/prisma";
 import Link from "next/link";
-import { Package, Folder, Image as ImageIcon, TrendingUp } from "lucide-react";
+import Image from "next/image";
+import { Package, Folder, Image as TrendingUp } from "lucide-react";
 
 export default async function AdminPage() {
   // Obtener estadísticas
-  const [productsCount, categoriesCount, mediaCount, recentProducts] =
-    await Promise.all([
-      prisma.product.count(),
-      prisma.category.count(),
-      prisma.media.count(),
-      prisma.product.findMany({
-        take: 5,
-        orderBy: { createdAt: "desc" },
-        include: { category: true },
-      }),
-    ]);
+  const [productsCount, categoriesCount, recentProducts] = await Promise.all([
+    prisma.product.count(),
+    prisma.category.count(),
+    prisma.product.findMany({
+      take: 5,
+      orderBy: { createdAt: "desc" },
+      include: { category: true },
+    }),
+  ]);
 
   const stats = [
     {
@@ -123,12 +122,14 @@ export default async function AdminPage() {
                 key={product.id}
                 className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
               >
-                <div className="w-12 h-12 bg-gray-200 rounded-lg flex-shrink-0 overflow-hidden">
+                <div className="w-12 h-12 bg-gray-200 rounded-lg flex-shrink-0 overflow-hidden relative">
                   {product.imageUrl ? (
-                    <img
+                    <Image
                       src={product.imageUrl}
                       alt={product.name}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
+                      sizes="48px"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">

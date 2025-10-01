@@ -47,7 +47,7 @@ export function DeleteCategoryButton({
       } else {
         alert(`Error: ${result.error}`);
       }
-    } catch (error) {
+    } catch {
       alert("Error al eliminar la categoría");
     } finally {
       setIsDeleting(false);

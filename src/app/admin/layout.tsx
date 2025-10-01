@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import Link from "next/link";
-import { Package, Folder, Image as ImageIcon } from "lucide-react";
+import { Package, Folder } from "lucide-react";
 
 export default async function AdminLayout({
   children,

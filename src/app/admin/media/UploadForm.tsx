@@ -60,7 +60,7 @@ export default function UploadForm() {
         // Refrescar la página para mostrar las nuevas imágenes
         router.refresh();
       }
-    } catch (error) {
+    } catch {
       setUploadStatus({
         success: false,
         message: "Error al subir archivos",

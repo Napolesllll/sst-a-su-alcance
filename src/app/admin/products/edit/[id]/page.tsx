@@ -7,9 +7,10 @@ import { ArrowLeft } from "lucide-react";
 export default async function EditProductPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const productId = parseInt(params.id);
+  const { id } = await params;
+  const productId = parseInt(id);
 
   if (isNaN(productId)) {
     notFound();

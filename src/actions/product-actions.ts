@@ -54,7 +54,7 @@ export async function createOrUpdateProduct(
         const result = await uploadToCloudinary(imageFile, 'productos')
         imageUrl = result.url
         publicId = result.publicId
-      } catch (error) {
+      } catch {
         return {
           success: false,
           errors: { image: 'Error al subir la imagen' }
@@ -117,20 +117,23 @@ export async function createOrUpdateProduct(
         message: 'Producto creado correctamente'
       }
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error en createOrUpdateProduct:', error)
 
-    if (error.code === 'P2003') {
-      return {
-        success: false,
-        errors: { categoryId: 'La categoría seleccionada no existe' }
+    if (error && typeof error === 'object' && 'code' in error) {
+      const prismaError = error as { code: string }
+      if (prismaError.code === 'P2003') {
+        return {
+          success: false,
+          errors: { categoryId: 'La categoría seleccionada no existe' }
+        }
       }
     }
 
     return {
       success: false,
       errors: {
-        general: error.message || 'Error al procesar el producto'
+        general: error instanceof Error ? error.message : 'Error al procesar el producto'
       }
     }
   }
@@ -158,8 +161,11 @@ export async function deleteProduct(productId: number) {
 
     revalidatePath('/admin/products')
     return { success: true }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error al eliminar producto:', error)
-    return { success: false, error: error.message }
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Error desconocido al eliminar producto'
+    }
   }
 }

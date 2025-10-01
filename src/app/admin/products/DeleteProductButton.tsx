@@ -30,7 +30,7 @@ export function DeleteProductButton({ productId }: { productId: number }) {
       } else {
         alert(`Error: ${result.error}`);
       }
-    } catch (error) {
+    } catch {
       alert("Error al eliminar el producto");
     } finally {
       setIsDeleting(false);

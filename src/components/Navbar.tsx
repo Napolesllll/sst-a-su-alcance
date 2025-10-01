@@ -10,7 +10,7 @@ export const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [mobileDropdown, setMobileDropdown] = useState<string | null>(null);
-  const menuRef = useRef(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   // Efecto para cambiar el navbar al hacer scroll
   useEffect(() => {
@@ -28,8 +28,8 @@ export const Navbar = () => {
 
   // Cerrar menú al hacer clic fuera o al hacer scroll
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setIsOpen(false);
         setOpenDropdown(null);
       }

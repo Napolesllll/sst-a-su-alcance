@@ -1,9 +1,18 @@
-"use client";
 import prisma from "@/lib/prisma";
 import UploadForm from "./UploadForm";
-import { Trash2, Copy, Check } from "lucide-react";
+import { Trash2, Copy } from "lucide-react";
 import { deleteMedia } from "@/actions/media-actions";
 import Image from "next/image";
+
+interface MediaItem {
+  id: number;
+  url: string;
+  publicId: string;
+  filename: string;
+  mimeType: string;
+  folder: string;
+  createdAt: Date;
+}
 
 export default async function MediaManagerPage() {
   const mediaItems = await prisma.media.findMany({
@@ -98,7 +107,7 @@ export default async function MediaManagerPage() {
   );
 }
 
-function MediaCard({ media }: { media: any }) {
+function MediaCard({ media }: { media: MediaItem }) {
   return (
     <div className="group border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-all">
       <div className="relative aspect-square bg-gray-100">
@@ -147,8 +156,13 @@ function CopyUrlButton({ url }: { url: string }) {
 }
 
 function DeleteButton({ mediaId }: { mediaId: number }) {
+  const handleDelete = async (formData: FormData) => {
+    "use server";
+    await deleteMedia(formData);
+  };
+
   return (
-    <form action={deleteMedia}>
+    <form action={handleDelete}>
       <input type="hidden" name="id" value={mediaId} />
       <button
         type="submit"

@@ -54,7 +54,7 @@ export async function createOrUpdateCategory(
         const result = await uploadToCloudinary(imageFile, 'categorias')
         imageUrl = result.url
         publicId = result.publicId
-      } catch (error) {
+      } catch {
         return {
           success: false,
           errors: { image: 'Error al subir la imagen' }
@@ -142,21 +142,24 @@ export async function createOrUpdateCategory(
         message: 'Categoría creada correctamente'
       }
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error en createOrUpdateCategory:', error)
 
-    if (error.code === 'P2002') {
-      const target = error.meta?.target?.[0]
-      if (target === 'slug') {
-        return {
-          success: false,
-          errors: { slug: 'Este slug ya está en uso' }
+    if (error && typeof error === 'object' && 'code' in error) {
+      const prismaError = error as { code: string; meta?: { target?: string[] } }
+      if (prismaError.code === 'P2002') {
+        const target = prismaError.meta?.target?.[0]
+        if (target === 'slug') {
+          return {
+            success: false,
+            errors: { slug: 'Este slug ya está en uso' }
+          }
         }
-      }
-      if (target === 'name') {
-        return {
-          success: false,
-          errors: { name: 'Este nombre ya está en uso' }
+        if (target === 'name') {
+          return {
+            success: false,
+            errors: { name: 'Este nombre ya está en uso' }
+          }
         }
       }
     }
@@ -164,7 +167,7 @@ export async function createOrUpdateCategory(
     return {
       success: false,
       errors: {
-        general: error.message || 'Error al procesar la categoría'
+        general: error instanceof Error ? error.message : 'Error al procesar la categoría'
       }
     }
   }
@@ -202,8 +205,11 @@ export async function deleteCategory(categoryId: number) {
     revalidatePath('/admin/categories')
     revalidatePath('/productos')
     return { success: true }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error al eliminar categoría:', error)
-    return { success: false, error: error.message }
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Error desconocido al eliminar categoría'
+    }
   }
 }

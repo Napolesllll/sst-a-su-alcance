@@ -5,15 +5,16 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Package2, Tag } from "lucide-react";
 
 interface ProductPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default async function ProductoDetallePage({
   params,
 }: ProductPageProps) {
-  const productId = parseInt(params.id);
+  const { id } = await params;
+  const productId = parseInt(id);
 
   if (isNaN(productId)) {
     notFound();

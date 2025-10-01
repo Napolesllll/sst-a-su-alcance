@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { createOrUpdateCategory } from "@/actions/category-actions";
 import { X, Upload, ImageIcon } from "lucide-react";
 
@@ -27,7 +28,6 @@ export default function CategoryForm({ category }: CategoryFormProps) {
   const [imagePreview, setImagePreview] = useState<string | null>(
     category?.imageUrl || null
   );
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const [slugValue, setSlugValue] = useState(category?.slug || "");
@@ -38,7 +38,6 @@ export default function CategoryForm({ category }: CategoryFormProps) {
       if (!category) {
         formRef.current?.reset();
         setImagePreview(null);
-        setSelectedFile(null);
         setSlugValue("");
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
@@ -65,7 +64,6 @@ export default function CategoryForm({ category }: CategoryFormProps) {
         return;
       }
 
-      setSelectedFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -76,7 +74,6 @@ export default function CategoryForm({ category }: CategoryFormProps) {
 
   const clearImage = () => {
     setImagePreview(category?.imageUrl || null);
-    setSelectedFile(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -179,9 +176,11 @@ export default function CategoryForm({ category }: CategoryFormProps) {
 
           {imagePreview ? (
             <div className="relative">
-              <img
+              <Image
                 src={imagePreview}
                 alt="Vista previa"
+                width={500}
+                height={192}
                 className="w-full h-48 object-cover rounded-lg border"
               />
               <button

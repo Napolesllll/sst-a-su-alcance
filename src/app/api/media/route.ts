@@ -11,9 +11,9 @@ export async function GET() {
         filename: true
       }
     })
-    
+
     return NextResponse.json(media)
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Error al obtener medios' },
       { status: 500 }

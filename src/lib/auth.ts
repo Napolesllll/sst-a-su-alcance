@@ -27,14 +27,15 @@ export const authOptions: NextAuthOptions = {
         }
 
         const isValid = await bcrypt.compare(credentials.password, user.password);
-        
+
         if (!isValid) {
           return null;
         }
 
         // Retornar objeto de usuario sin la contraseña
+        // Convertir el id a string para cumplir con el tipo User de NextAuth
         return {
-          id: user.id,
+          id: String(user.id),
           name: user.name,
           email: user.email,
           role: user.role
