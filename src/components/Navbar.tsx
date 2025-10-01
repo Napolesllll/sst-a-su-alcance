@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { Menu, X, ChevronDown } from "lucide-react";
@@ -12,44 +12,69 @@ export const Navbar = () => {
   const [mobileDropdown, setMobileDropdown] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Efecto para cambiar el navbar al hacer scroll
+  // Optimización: Throttle para scroll
   useEffect(() => {
+    let ticking = false;
     const handleScroll = () => {
-      if (window.scrollY > 20) {
-        setScrolled(true);
-      } else {
-        setScrolled(false);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setScrolled(window.scrollY > 20);
+          ticking = false;
+        });
+        ticking = true;
       }
     };
 
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Cerrar menú al hacer clic fuera o al hacer scroll
+  // Optimización: Prevenir scroll del body cuando el menú está abierto
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+      document.body.style.touchAction = "none";
+    } else {
+      document.body.style.overflow = "";
+      document.body.style.touchAction = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+      document.body.style.touchAction = "";
+    };
+  }, [isOpen]);
+
+  // Optimización: Memoizar el cierre del menú
+  const closeMenu = useCallback(() => {
+    setIsOpen(false);
+    setOpenDropdown(null);
+    setMobileDropdown(null);
+  }, []);
+
+  // Cerrar menú al hacer clic fuera
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-        setOpenDropdown(null);
+        closeMenu();
       }
     };
 
     const handleScroll = () => {
-      setIsOpen(false);
-      setOpenDropdown(null);
+      if (isOpen) closeMenu();
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    window.addEventListener("scroll", handleScroll);
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      window.addEventListener("scroll", handleScroll, { passive: true });
+    }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
       window.removeEventListener("scroll", handleScroll);
     };
-  }, []);
+  }, [isOpen, closeMenu]);
 
-  // Elementos de navegación con menús desplegables
+  // Elementos de navegación
   const navItems = [
     { name: "Inicio", href: "/", icon: "🏠" },
     { name: "Sobre Nosotros", href: "#sobre-nosotros", icon: "👥" },
@@ -57,10 +82,7 @@ export const Navbar = () => {
     {
       name: "Productos",
       icon: "📦",
-      subItems: [
-        { name: "Todos los productos", href: "/productos" },
-        // Agregar más subitems si es necesario
-      ],
+      subItems: [{ name: "Todos los productos", href: "/productos" }],
     },
     {
       name: "Intranet",
@@ -72,6 +94,10 @@ export const Navbar = () => {
     },
     { name: "Contacto", href: "#contacto", icon: "📞" },
   ];
+
+  const toggleMobileDropdown = useCallback((itemName: string) => {
+    setMobileDropdown((prev) => (prev === itemName ? null : itemName));
+  }, []);
 
   return (
     <motion.nav
@@ -85,7 +111,7 @@ export const Navbar = () => {
       transition={{ type: "spring", stiffness: 120, damping: 20 }}
     >
       <div className="container mx-auto px-4 flex justify-between items-center">
-        {/* Logo con efecto mejorado */}
+        {/* Logo optimizado */}
         <motion.div
           whileHover={{ scale: 1.1, rotate: 5 }}
           whileTap={{ scale: 0.95, rotate: -5 }}
@@ -98,10 +124,11 @@ export const Navbar = () => {
                 alt="Logo SST A SU ALCANCE"
                 width={scrolled ? 170 : 190}
                 height={scrolled ? 170 : 210}
-                className=" shadow-lg border-2 border-cyan-400 transition-all duration-300"
+                className="shadow-lg border-2 border-cyan-400 transition-all duration-300"
+                priority
               />
               <motion.div
-                className="absolute inset-0  border-2 border-cyan-500"
+                className="absolute inset-0 border-2 border-cyan-500"
                 animate={{
                   scale: [1, 1.1, 1],
                   opacity: [0.5, 1, 0.5],
@@ -129,7 +156,6 @@ export const Navbar = () => {
             >
               {item.subItems ? (
                 <div className="relative">
-                  {/* Botón para productos/intranet */}
                   <motion.button
                     className="px-4 py-2 text-white font-medium flex items-center gap-1 relative group"
                     whileHover={{ scale: 1.05 }}
@@ -151,7 +177,6 @@ export const Navbar = () => {
                     <motion.div className="absolute -inset-2 rounded-lg bg-gradient-to-r from-cyan-500/20 to-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </motion.button>
 
-                  {/* Menú desplegable */}
                   <AnimatePresence>
                     {openDropdown === item.name && (
                       <motion.div
@@ -192,154 +217,126 @@ export const Navbar = () => {
           ))}
         </div>
 
-        {/* Botón Hamburguesa Mejorado */}
+        {/* Botón Hamburguesa optimizado para móvil */}
         <div className="md:hidden flex items-center">
           <motion.button
             onClick={() => setIsOpen(!isOpen)}
-            whileTap={{ scale: 0.8 }}
-            className="relative z-50 p-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600"
+            whileTap={{ scale: 0.9 }}
+            className="relative z-50 p-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 touch-manipulation"
+            aria-label={isOpen ? "Cerrar menú" : "Abrir menú"}
           >
             {isOpen ? (
-              <X size={32} color="white" className="stroke-2" />
+              <X size={28} color="white" className="stroke-2" />
             ) : (
-              <Menu size={32} color="white" className="stroke-2" />
+              <Menu size={28} color="white" className="stroke-2" />
             )}
-            <motion.span
-              className="absolute inset-0 rounded-full border-2 border-cyan-400"
-              animate={
-                isOpen
-                  ? {
-                      scale: [1, 1.2, 1],
-                      opacity: [0, 1, 0],
-                    }
-                  : {}
-              }
-              transition={{ duration: 0.5 }}
-            />
           </motion.button>
         </div>
       </div>
 
-      {/* Menú Mobile Rediseñado */}
+      {/* Menú Mobile Optimizado */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            ref={menuRef}
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.4, ease: "easeInOut" }}
-            className="absolute top-full left-0 w-full bg-[#0f172a] shadow-2xl overflow-hidden border-t border-cyan-500/30"
-          >
-            {/* Botón de cierre en la parte superior */}
-            <div className="absolute top-4 right-4 z-10">
-              <motion.button
-                onClick={() => setIsOpen(false)}
-                whileHover={{ scale: 1.1, rotate: 90 }}
-                whileTap={{ scale: 0.9 }}
-                className="p-2 rounded-full bg-gradient-to-r from-cyan-600 to-blue-700 shadow-lg"
-              >
-                <X size={24} color="white" className="stroke-2" />
-              </motion.button>
-            </div>
+          <>
+            {/* Overlay para cerrar al tocar fuera */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 md:hidden"
+              onClick={closeMenu}
+            />
 
-            <div className="container mx-auto px-4 py-8">
-              <div className="grid grid-cols-1 gap-2">
-                {navItems.map((item, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ x: -50, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{
-                      delay: index * 0.1,
-                      type: "spring",
-                      stiffness: 200,
-                    }}
-                    className="w-full"
-                  >
-                    {item.subItems ? (
-                      <div className="flex flex-col">
-                        {/* Botón para productos/intranet en móvil */}
-                        <motion.button
-                          onClick={() =>
-                            setMobileDropdown(
-                              mobileDropdown === item.name ? null : item.name
-                            )
-                          }
-                          className="flex items-center justify-between w-full py-4 px-6 text-white font-medium rounded-xl bg-gradient-to-r from-blue-900/30 to-cyan-900/30 hover:from-cyan-700/40 hover:to-blue-700/40 transition-all"
-                          whileHover={{ scale: 1.03 }}
-                          whileTap={{ scale: 0.98 }}
+            <motion.div
+              ref={menuRef}
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+              className="fixed top-0 right-0 h-screen w-[85vw] max-w-sm bg-[#0f172a] shadow-2xl overflow-y-auto md:hidden z-50"
+            >
+              {/* Header del menú móvil */}
+              <div className="sticky top-0 bg-gradient-to-r from-cyan-600 to-blue-700 p-4 flex justify-between items-center shadow-lg z-10">
+                <h2 className="text-white font-bold text-lg">Menú</h2>
+                <motion.button
+                  onClick={closeMenu}
+                  whileTap={{ scale: 0.9 }}
+                  className="p-2 rounded-full bg-white/20 touch-manipulation"
+                  aria-label="Cerrar menú"
+                >
+                  <X size={24} color="white" className="stroke-2" />
+                </motion.button>
+              </div>
+
+              {/* Items del menú */}
+              <div className="p-4 pb-20">
+                <div className="space-y-2">
+                  {navItems.map((item, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ x: 50, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      transition={{
+                        delay: index * 0.05,
+                        type: "spring",
+                        stiffness: 300,
+                      }}
+                    >
+                      {item.subItems ? (
+                        <div>
+                          <motion.button
+                            onClick={() => toggleMobileDropdown(item.name)}
+                            className="flex items-center justify-between w-full py-3 px-4 text-white font-medium rounded-lg bg-gradient-to-r from-blue-900/40 to-cyan-900/40 active:from-cyan-700/50 active:to-blue-700/50 transition-all touch-manipulation"
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="text-xl">{item.icon}</span>
+                              <span className="text-base">{item.name}</span>
+                            </div>
+                            <ChevronDown
+                              size={18}
+                              className={`transition-transform duration-200 ${
+                                mobileDropdown === item.name ? "rotate-180" : ""
+                              }`}
+                            />
+                          </motion.button>
+
+                          <AnimatePresence>
+                            {mobileDropdown === item.name && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="overflow-hidden"
+                              >
+                                <div className="pl-8 pt-2 space-y-1">
+                                  {item.subItems.map((subItem, subIndex) => (
+                                    <Link
+                                      key={subIndex}
+                                      href={subItem.href}
+                                      onClick={closeMenu}
+                                      className="flex items-center gap-3 py-2.5 px-4 text-white text-sm font-medium rounded-lg bg-gradient-to-r from-blue-800/30 to-cyan-800/30 active:from-cyan-700/40 active:to-blue-700/40 transition-all touch-manipulation"
+                                    >
+                                      <span>•</span>
+                                      <span>{subItem.name}</span>
+                                    </Link>
+                                  ))}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      ) : (
+                        <Link
+                          href={item.href}
+                          className="flex items-center justify-between py-3 px-4 text-white font-medium rounded-lg bg-gradient-to-r from-blue-900/40 to-cyan-900/40 active:from-cyan-700/50 active:to-blue-700/50 transition-all touch-manipulation"
+                          onClick={closeMenu}
                         >
-                          <div className="flex items-center gap-4">
-                            <span className="text-2xl">{item.icon}</span>
-                            <span className="text-xl">{item.name}</span>
+                          <div className="flex items-center gap-3">
+                            <span className="text-xl">{item.icon}</span>
+                            <span className="text-base">{item.name}</span>
                           </div>
-                          <ChevronDown
-                            size={20}
-                            className={`transition-transform ${
-                              mobileDropdown === item.name ? "rotate-180" : ""
-                            }`}
-                          />
-                        </motion.button>
-
-                        <AnimatePresence>
-                          {mobileDropdown === item.name && (
-                            <motion.div
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: "auto", opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              className="pl-10 overflow-hidden"
-                            >
-                              {item.subItems.map((subItem, subIndex) => (
-                                <Link
-                                  key={subIndex}
-                                  href={subItem.href}
-                                  onClick={() => setIsOpen(false)}
-                                  className="flex items-center gap-4 py-3 px-6 text-white font-medium rounded-xl bg-gradient-to-r from-blue-800/20 to-cyan-800/20 hover:from-cyan-700/30 hover:to-blue-700/30 transition-all"
-                                >
-                                  <span className="text-xl">•</span>
-                                  <span className="text-lg">
-                                    {subItem.name}
-                                  </span>
-                                </Link>
-                              ))}
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    ) : (
-                      <Link
-                        href={item.href}
-                        className="flex items-center gap-4 py-4 px-6 text-white font-medium rounded-xl bg-gradient-to-r from-blue-900/30 to-cyan-900/30 hover:from-cyan-700/40 hover:to-blue-700/40 transition-all group"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        <motion.span
-                          className="text-2xl"
-                          animate={{
-                            rotate: [0, 10, 0],
-                            scale: [1, 1.2, 1],
-                          }}
-                          transition={{
-                            duration: 0.5,
-                            delay: 0.2,
-                          }}
-                        >
-                          {item.icon}
-                        </motion.span>
-                        <span className="text-xl group-hover:text-cyan-300 transition-colors">
-                          {item.name}
-                        </span>
-                        <motion.div
-                          className="ml-auto"
-                          animate={{
-                            x: [0, 10, 0],
-                          }}
-                          transition={{
-                            duration: 1,
-                            repeat: Infinity,
-                            repeatType: "reverse",
-                          }}
-                        >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
                             className="h-5 w-5 text-cyan-400"
@@ -352,27 +349,28 @@ export const Navbar = () => {
                               clipRule="evenodd"
                             />
                           </svg>
-                        </motion.div>
-                      </Link>
-                    )}
-                  </motion.div>
-                ))}
-              </div>
+                        </Link>
+                      )}
+                    </motion.div>
+                  ))}
+                </div>
 
-              {/* Footer del menú móvil simplificado */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: navItems.length * 0.1 + 0.1 }}
-                className="mt-8 pt-6 border-t border-cyan-500/20 flex flex-col items-center"
-              >
-                <p className="text-cyan-400/80 text-center text-sm">
-                  © {new Date().getFullYear()} SST A SU ALCANCE - Todos los
-                  derechos reservados
-                </p>
-              </motion.div>
-            </div>
-          </motion.div>
+                {/* Footer del menú móvil */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="mt-8 pt-6 border-t border-cyan-500/20"
+                >
+                  <p className="text-cyan-400/80 text-center text-xs leading-relaxed">
+                    © {new Date().getFullYear()} SST A SU ALCANCE
+                    <br />
+                    Todos los derechos reservados
+                  </p>
+                </motion.div>
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </motion.nav>
