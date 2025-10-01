@@ -1,7 +1,7 @@
 import prisma from "@/lib/prisma";
 import Image from "next/image";
 import Link from "next/link";
-import { Package, Grid3x3, ArrowLeft, Home } from "lucide-react";
+import { Package, Grid3x3, ArrowLeft } from "lucide-react";
 
 export default async function ProductosPage() {
   const categories = await prisma.category.findMany({

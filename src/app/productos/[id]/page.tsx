@@ -2,7 +2,7 @@ import prisma from "@/lib/prisma";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Package2, Tag, Heart, ShoppingCart } from "lucide-react";
+import { ArrowLeft, Package2, Tag, ShoppingCart } from "lucide-react";
 
 interface ProductPageProps {
   params: Promise<{
