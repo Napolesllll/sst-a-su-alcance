@@ -3,7 +3,6 @@ import { motion, useAnimationControls } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 
-// Lista de nombres de archivo de tus clientes (actualiza con tus imágenes)
 const clientesImagenes = [
   "AGROSAN.png",
   "ALCALDIA.jpeg",
@@ -23,19 +22,33 @@ const clientesImagenes = [
   "ARL SURA.png",
 ];
 
+// Partículas predefinidas para evitar hidratación
+const PARTICLES = Array.from({ length: 20 }, (_, i) => ({
+  id: i,
+  size: 20 + ((i * 3.5) % 60),
+  top: (i * 17) % 100,
+  left: (i * 23) % 100,
+  duration: 8 + (i % 12),
+  yOffset: -20 + (i % 40),
+  xOffset: -15 + (i % 30),
+}));
+
 export const Clientes = () => {
   const controls = useAnimationControls();
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
   const [itemWidth, setItemWidth] = useState(0);
+  const [mounted, setMounted] = useState(false);
 
-  // Configuración para el desplazamiento suave
-  const copies = 3; // Número de copias para un efecto continuo
+  const copies = 3;
   const duplicatedClientes = Array(copies).fill(clientesImagenes).flat();
-  const speed = 25.7; // Velocidad ajustada para movimiento suave
+  const speed = 25.7;
 
   useEffect(() => {
-    // Medir el contenedor después del renderizado inicial
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
     const updateDimensions = () => {
       if (containerRef.current) {
         setContainerWidth(containerRef.current.offsetWidth);
@@ -43,7 +56,6 @@ export const Clientes = () => {
         const firstItem =
           containerRef.current.querySelector<HTMLElement>(".carousel-item");
         if (firstItem) {
-          // Incluir margen en el cálculo del ancho (mx-4 = 16px a cada lado)
           setItemWidth(firstItem.offsetWidth + 32);
         }
       }
@@ -59,17 +71,14 @@ export const Clientes = () => {
     if (!containerWidth || !itemWidth || itemWidth === 0) return;
 
     const totalWidth = duplicatedClientes.length * itemWidth;
-    // Calcular la distancia necesaria para mostrar todas las copias
     const distance = -(totalWidth - containerWidth);
 
     const animateCarousel = async () => {
-      // Posicionar el carrusel al inicio
       await controls.start({
         x: 0,
         transition: { duration: 0 },
       });
 
-      // Bucle infinito suave
       while (true) {
         await controls.start({
           x: distance,
@@ -79,7 +88,6 @@ export const Clientes = () => {
           },
         });
 
-        // Reiniciar posición sin animación
         await controls.start({
           x: 0,
           transition: { duration: 0 },
@@ -97,32 +105,33 @@ export const Clientes = () => {
       id="clientes"
       className="py-32 bg-gradient-to-br from-cyan-900 to-blue-900 relative overflow-hidden scroll-mt-24"
     >
-      {/* Fondo decorativo con partículas */}
+      {/* Fondo decorativo con partículas - Solo después del montaje */}
       <div className="absolute inset-0 z-0">
-        {[...Array(20)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute rounded-full bg-cyan-500/10"
-            style={{
-              width: Math.random() * 80 + 20,
-              height: Math.random() * 80 + 20,
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              y: [0, Math.random() * 40 - 20],
-              x: [0, Math.random() * 30 - 15],
-              scale: [1, 1.2, 1],
-              opacity: [0.1, 0.2, 0.1],
-            }}
-            transition={{
-              duration: 8 + Math.random() * 12,
-              repeat: Infinity,
-              repeatType: "reverse",
-              ease: "easeInOut",
-            }}
-          />
-        ))}
+        {mounted &&
+          PARTICLES.map((particle) => (
+            <motion.div
+              key={particle.id}
+              className="absolute rounded-full bg-cyan-500/10"
+              style={{
+                width: particle.size,
+                height: particle.size,
+                top: `${particle.top}%`,
+                left: `${particle.left}%`,
+              }}
+              animate={{
+                y: [0, particle.yOffset],
+                x: [0, particle.xOffset],
+                scale: [1, 1.2, 1],
+                opacity: [0.1, 0.2, 0.1],
+              }}
+              transition={{
+                duration: particle.duration,
+                repeat: Infinity,
+                repeatType: "reverse",
+                ease: "easeInOut",
+              }}
+            />
+          ))}
       </div>
 
       {/* Efecto de luz central */}
@@ -155,7 +164,7 @@ export const Clientes = () => {
           </motion.p>
         </div>
 
-        {/* Carrusel optimizado para desplazamiento suave */}
+        {/* Carrusel optimizado */}
         <div
           ref={containerRef}
           className="relative w-full overflow-hidden py-6"
@@ -171,10 +180,8 @@ export const Clientes = () => {
                   zIndex: 10,
                 }}
               >
-                {/* Efecto de resplandor sutil */}
                 <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 rounded-xl" />
 
-                {/* Contenedor de la imagen optimizado */}
                 <div className="relative w-full h-full">
                   <Image
                     src={`/clientes/${imagen}`}
@@ -182,11 +189,10 @@ export const Clientes = () => {
                     fill
                     className="object-contain p-2"
                     quality={90}
-                    priority={i < 8} // Prioriza la carga de las primeras imágenes
+                    priority={i < 8}
                   />
                 </div>
 
-                {/* Efecto de reflejo */}
                 <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-white/20 to-transparent rounded-b-xl" />
               </motion.div>
             ))}
